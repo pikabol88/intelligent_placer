@@ -13,6 +13,7 @@ def compress_image(src: np.ndarray, scale_percent: int):
     width = int(src.shape[1] * scale_percent / 100)
     height = int(src.shape[0] * scale_percent / 100)
     new_size = (width, height)
+
     return cv2.resize(src, new_size)
 
 
@@ -34,23 +35,29 @@ def extract_predetermined_items(img: np.ndarray):
 
 
 def extract_polygon_and_items(img: np.ndarray):
-    img = canny(gaussian(img, 3), sigma=1.5, low_threshold=0.05)
     height, width = img.shape
+
+    img = canny(gaussian(img, 3), sigma=1.5, low_threshold=0.05)
     img = img[5:height - 5, 5:width - 5]
     img = binary_fill_holes(binary_closing(img, footprint=np.ones((10, 10))))
+
     polygon_img = img[0:int(height / 2), 0:width]
     items_img = img[int(height / 2):height, 0:width]
+
     return polygon_img, items_img
 
 
 def get_smallest_component_mask(img: np.ndarray):
     labels = measure.label(img)
     properties = measure.regionprops(labels)
+
     item = np.array([element.area for element in properties]).argmin()
+
     return labels == item + 1, properties[item]
 
 
 def draw_mask_contours(mask, image):
     contours, hierarchy = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     cv2.drawContours(image, [contours[0]], 0, (0, 255, 0), 3)
+
     return image

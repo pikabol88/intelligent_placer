@@ -42,8 +42,8 @@ class BasicItem:
 class Item(BasicItem):
     def __init__(self, item_image: np.ndarray, item_name: str):
         super().__init__(item_image, item_name)
-        self.name = item_name
-        self._path = item_name  # remove
+        self._name = item_name
+        self._path = item_name
 
         self._processed_image = None
         self._contour_image = None

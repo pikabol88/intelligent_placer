@@ -1,9 +1,8 @@
 import matplotlib.pyplot as plt
-
 from os import listdir
-from basic_item import *
-from image_processing import *
 
+from intelligent_placer_lib.basic_item import *
+from intelligent_placer_lib.image_processing import compress_image, extract_polygon_and_items
 
 scale_ratio = 30
 
@@ -17,13 +16,19 @@ def process_predetermined_items(path_to_folder: str):
         items.append(Item(img, image_path))
 
 
-def check_image(path: str) -> bool:
+def check_image(path: str, ) -> bool:
     img = cv2.cvtColor(cv2.imread(path), cv2.COLOR_RGB2GRAY)
     img = compress_image(img, scale_percent=scale_ratio)
-    return _process_image(img)
+
+    result, result_img = _process_image(img)
+
+    path, img_format = path.split('.')
+    cv2.imwrite(f"{path}_result.{img_format}", result_img)
+
+    return result
 
 
-def _process_image(img: np.ndarray):
+def _process_image(img: np.ndarray) -> [bool, np.ndarray]:
     result = np.ndarray
 
     polygon_img, items_img = extract_polygon_and_items(img)
@@ -33,14 +38,14 @@ def _process_image(img: np.ndarray):
     for el in items_set.items:
         result = _try_place_item(polygon.mask, el.mask, el.properties)
         if result is None:
-            return False
+            return False, None
 
     plt.imshow(result, cmap='gray')
     plt.show()
-    return True
+    return True, result
 
 
-def _try_place_item(place_for_items, item_mask, item_propreties, step=5):
+def _try_place_item(place_for_items, item_mask, item_properties, step=5) -> np.ndarray:
     place_y, place_x = place_for_items.shape
     item_y, item_x = item_mask.shape
 
@@ -50,7 +55,7 @@ def _try_place_item(place_for_items, item_mask, item_propreties, step=5):
             item_contour_box = place_for_items[pos_y:pos_y + item_y, pos_x:pos_x + item_x].astype(int)
             bitwiseAnd = cv2.bitwise_and(item_contour_box.astype("uint8"), item_mask.astype("uint8"))
 
-            if np.sum(bitwiseAnd) == item_propreties.area:
+            if np.sum(bitwiseAnd) == item_properties.area:
                 place_for_items[pos_y:pos_y + item_y, pos_x:pos_x + item_x] = cv2.bitwise_not(item_mask)
                 return place_for_items
 
