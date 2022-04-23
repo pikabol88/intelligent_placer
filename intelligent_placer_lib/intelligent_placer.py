@@ -1,10 +1,12 @@
+import os
+
 import matplotlib.pyplot as plt
 from os import listdir
 
 from intelligent_placer_lib.basic_item import *
 from intelligent_placer_lib.image_processing import compress_image, extract_polygon_and_items
 
-scale_ratio = 30
+scale_ratio = 20
 
 
 def process_predetermined_items(path_to_folder: str):
@@ -16,14 +18,17 @@ def process_predetermined_items(path_to_folder: str):
         items.append(Item(img, image_path))
 
 
-def check_image(path: str, ) -> bool:
+def check_image(path: str, path_for_results:str) -> bool:
     img = cv2.cvtColor(cv2.imread(path), cv2.COLOR_RGB2GRAY)
     img = compress_image(img, scale_percent=scale_ratio)
 
     result, result_img = _process_image(img)
 
-    path, img_format = path.split('.')
-    cv2.imwrite(f"{path}_result.{img_format}", result_img)
+    if result:
+        res = (result_img * 255).astype("uint8")
+        img_name = path.split("\\")[-1]
+        new_path = f"{path_for_results}/{str(result)}{img_name}"
+        cv2.imwrite(new_path, res)
 
     return result
 
@@ -35,13 +40,17 @@ def _process_image(img: np.ndarray) -> [bool, np.ndarray]:
     polygon = Polygon(polygon_img, "polygon")
     items_set = ItemsSet(items_img)
 
+    total_area = np.array([element.properties.area for element in items_set.items])
+    if total_area.sum() > polygon.properties[0].area:
+        return False, None
+
     for el in items_set.items:
         result = _try_place_item(polygon.mask, el.mask, el.properties)
         if result is None:
-            return False, None
+            return False, result
 
-    plt.imshow(result, cmap='gray')
-    plt.show()
+   # plt.imshow(result, cmap='gray')
+   # plt.show()
     return True, result
 
 
@@ -63,7 +72,7 @@ def _try_place_item(place_for_items, item_mask, item_properties, step=5) -> np.n
 
 
 if __name__ == '__main__':
-    image = cv2.cvtColor(cv2.imread("C:/Users/nena2/Documents/GitHub/intelligent_placer/test/2.jpg"),
-                         cv2.COLOR_RGB2GRAY)
-    image = compress_image(image, scale_percent=20)
-    _process_image(image)
+    path = "C:/Users/nena2/Documents/GitHub/intelligent_placer/test_dataset"
+    result_path = "C:/Users/nena2/Documents/GitHub/intelligent_placer/results"
+    for filename in os.listdir(path):
+        check_image(str(os.path.join(path, filename)), result_path)
