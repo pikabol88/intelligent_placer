@@ -1,4 +1,4 @@
-from os import listdir, path
+from os import listdir
 
 from intelligent_placer_lib.basic_item import *
 from intelligent_placer_lib.image_processing import compress_image, extract_polygon_and_items
@@ -68,17 +68,3 @@ def _try_place_item(place_for_items, item_mask, item_properties, step=5) -> np.n
             if np.sum(bitwiseAnd) == item_properties.area:
                 place_for_items[pos_y:pos_y + item_y, pos_x:pos_x + item_x] = cv2.bitwise_not(item_mask)
                 return place_for_items
-
-
-if __name__ == '__main__':
-    data_path = "C:/Users/nena2/Documents/GitHub/intelligent_placer/test_dataset"
-    result_path = "C:/Users/nena2/Documents/GitHub/intelligent_placer/results"
-    items_path = 'C:/Users/nena2/Documents/GitHub/intelligent_placer/items'
-
-    result_data_path = "result"
-    test_data_path = "test_dataset"
-
-    for filename in listdir(data_path):
-        check_image(str(path.join(data_path, filename)), result_path)
-
-    process_predetermined_items(items_path, result_path)

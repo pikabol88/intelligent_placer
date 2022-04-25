@@ -54,7 +54,6 @@ class Item(BasicItem):
         self._processed_image, self._contour_image, self.properties = extract_predetermined_items(self._original_image)
         self.mask = cv2.normalize(np.array(self.properties.image, dtype=np.int32), None, 0, 255,
                                   cv2.NORM_MINMAX).astype('uint8')
-        #cv2.imwrite(f"{self._path}", self._contour_image)
 
     @property
     def contour_image(self):
