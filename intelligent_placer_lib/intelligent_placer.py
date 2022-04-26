@@ -1,4 +1,5 @@
-from os import listdir
+import imghdr
+from os import listdir, path
 
 from intelligent_placer_lib.basic_item import *
 from intelligent_placer_lib.image_processing import compress_image, extract_polygon_and_items
@@ -8,29 +9,35 @@ scale_ratio = 20
 
 def process_predetermined_items(path_to_folder: str, path_for_results: str = "") -> list:
     processed_items = []
+
     for image_path in listdir(path_to_folder):
-        img = cv2.imread(f"{path_to_folder}/{image_path}")
-        img = compress_image(img, scale_ratio)
+        image_full_path = path.join(path_to_folder, image_path)
 
-        result = Item(img, image_path)
-        processed_items.append([(result.mask * 255).astype("uint8"), result.contour_image])
+        if imghdr.what(image_full_path) == 'jpeg':
+            img = cv2.imread(image_full_path)
+            img = compress_image(img, scale_ratio)
 
-        if len(path_for_results) > 0:
-            image_name = f"{path_for_results}/{image_path.split('/')[-1]}"
-            cv2.imwrite(image_name, result.contour_image)
+            result = Item(img, image_path)
+            processed_items.append([(result.mask * 255).astype("uint8"), result.contour_image])
+
+            if len(path_for_results) > 0:
+                image_name = f"{path_for_results}/{image_path.split('/')[-1]}"
+                cv2.imwrite(image_name, result.contour_image)
 
     return processed_items
 
 
-def check_image(path_to_folder: str, path_for_results: str = "") -> bool:
-    img = cv2.cvtColor(cv2.imread(path_to_folder), cv2.COLOR_RGB2GRAY)
+def check_image(path_to_img: str, path_for_results: str = "") -> bool:
+    if imghdr.what(path_to_img) != 'jpeg':
+        return False
+
+    img = cv2.cvtColor(cv2.imread(path_to_img), cv2.COLOR_RGB2GRAY)
     img = compress_image(img, scale_percent=scale_ratio)
 
     result, result_img = _process_image(img)
 
     if result and len(path_for_results) > 0:
-        img_name = path_to_folder.split("\\")[-1]
-        new_path = f"{path_for_results}/{str(result)}_{img_name}"
+        new_path = path.join(path_for_results, f"{str(result)}_{path.basename(path_to_img)}")
         cv2.imwrite(new_path, (result_img * 255).astype("uint8"))
 
     return result
@@ -68,3 +75,5 @@ def _try_place_item(place_for_items, item_mask, item_properties, step=5) -> np.n
             if np.sum(bitwiseAnd) == item_properties.area:
                 place_for_items[pos_y:pos_y + item_y, pos_x:pos_x + item_x] = cv2.bitwise_not(item_mask)
                 return place_for_items
+
+

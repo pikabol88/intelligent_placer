@@ -57,7 +57,7 @@ def get_smallest_component_mask(img: np.ndarray):
 
 
 def draw_mask_contours(mask, image):
-    contours, hierarchy = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    contours, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     cv2.drawContours(image, [contours[0]], 0, (0, 255, 0), 3)
 
     return image
