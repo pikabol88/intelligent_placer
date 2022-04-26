@@ -43,8 +43,7 @@ def _process_image(img: np.ndarray) -> [bool, np.ndarray]:
     polygon = Polygon(polygon_img, "polygon")
     items_set = ItemsSet(items_img)
 
-    total_area = np.array([element.properties.area for element in items_set.items])
-    if total_area.sum() > polygon.properties[0].area:
+    if sum(element.properties.area for element in items_set.items) > polygon.properties[0].area:
         return False, None
 
     for el in items_set.items:
